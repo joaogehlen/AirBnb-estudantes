@@ -29,7 +29,9 @@ export default function ListingsScreen() {
         className="mt-4 rounded-lg bg-slate-900 px-4 py-3"
         onPress={() => {
           setLocale(nextLocale);
-          void i18n.changeLanguage(nextLocale);
+          i18n.changeLanguage(nextLocale).catch((error: unknown) => {
+            console.warn('Language change failed', error);
+          });
         }}>
         <Text className="text-center font-semibold text-white">
           {t('language')}: {locale}

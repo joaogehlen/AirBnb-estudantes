@@ -33,12 +33,17 @@ const resources = {
 
 const locale = getLocales()[0]?.languageTag === 'pt-BR' ? 'pt-BR' : 'en-US';
 
-void i18n.use(initReactI18next).init({
-  compatibilityJSON: 'v4',
-  lng: locale,
-  fallbackLng: 'en-US',
-  resources,
-  interpolation: { escapeValue: false },
-});
+i18n
+  .use(initReactI18next)
+  .init({
+    compatibilityJSON: 'v4',
+    lng: locale,
+    fallbackLng: 'en-US',
+    resources,
+    interpolation: { escapeValue: false },
+  })
+  .catch((error: unknown) => {
+    console.warn('i18n initialization failed', error);
+  });
 
 export { i18n };
