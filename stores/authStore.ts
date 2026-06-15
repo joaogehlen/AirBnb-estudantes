@@ -1,11 +1,11 @@
 import { create } from 'zustand';
-import { Profile, UserType } from '../types';
+import { Profile } from '../types';
+import { supabase } from '../lib/supabase';
 
 interface AuthState {
   user: Profile | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  // Ações
   setUser: (user: Profile | null) => void;
   setLoading: (loading: boolean) => void;
   logout: () => void;
@@ -18,5 +18,8 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   setUser: (user) => set({ user, isAuthenticated: !!user, isLoading: false }),
   setLoading: (isLoading) => set({ isLoading }),
-  logout: () => set({ user: null, isAuthenticated: false }),
+  logout: () => {
+    supabase.auth.signOut();
+    set({ user: null, isAuthenticated: false });
+  },
 }));

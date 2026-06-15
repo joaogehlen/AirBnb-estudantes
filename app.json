@@ -6,10 +6,15 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    "splash": {
-      "image": "./assets/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#1B4F72"
+    "scheme": "studentnest",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.studentnest.app",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Precisamos da sua localização para mostrar imóveis próximos.",
+        "NSPhotoLibraryUsageDescription": "Selecione fotos do seu imóvel para anunciar.",
+        "NSCameraUsageDescription": "Tire fotos do seu imóvel para anunciar."
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -23,13 +28,27 @@
         "WRITE_EXTERNAL_STORAGE",
         "ACCESS_FINE_LOCATION",
         "ACCESS_COARSE_LOCATION",
-        "RECEIVE_BOOT_COMPLETED",
         "VIBRATE"
       ]
     },
     "plugins": [
       "expo-router",
-      "expo-image-picker",
+      "expo-font",
+      "expo-secure-store",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash.png",
+          "resizeMode": "contain",
+          "backgroundColor": "#1B4F72"
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Selecione fotos do seu imóvel para anunciar."
+        }
+      ],
       [
         "expo-location",
         {
@@ -37,7 +56,6 @@
         }
       ]
     ],
-    "scheme": "studentnest",
     "web": {
       "bundler": "metro"
     }

@@ -1,14 +1,18 @@
 import React, { useState } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
-  Alert, Image,
+  Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
+import { useQueryClient } from '@tanstack/react-query';
 import { Input } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
+import { createProperty, uploadAndInsertPhoto } from '../../lib/api';
+import { useAuthStore } from '../../stores/authStore';
+import { toast } from '../../lib/toast';
 import { COLORS, SIZES, PROPERTY_TYPES } from '../../constants';
 import { PropertyType } from '../../types';
 
@@ -26,10 +30,12 @@ const AMENITIES_OPTIONS = [
 ];
 
 export default function NewListingScreen() {
+  const { user } = useAuthStore();
+  const queryClient = useQueryClient();
   const [step, setStep] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState('');
 
-  // Dados do formulário
   const [type, setType] = useState<PropertyType>('room');
   const [city, setCity] = useState('');
   const [state, setState] = useState('');
@@ -51,8 +57,13 @@ export default function NewListingScreen() {
   };
 
   const pickImages = async () => {
+    const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!perm.granted) {
+      toast.error('Permissão necessária', 'Autorize o acesso às fotos para anunciar.');
+      return;
+    }
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ['images'],
       allowsMultipleSelection: true,
       quality: 0.8,
     });
@@ -70,14 +81,44 @@ export default function NewListingScreen() {
     });
   };
 
-  const handlePublish = () => {
+  const handlePublish = async () => {
+    if (!user) return;
     setLoading(true);
-    setTimeout(() => {
+    try {
+      setUploadProgress('Salvando imóvel...');
+      const property = await createProperty({
+        host_id: user.id,
+        title: title.trim(),
+        description: description.trim(),
+        type,
+        city: city.trim(),
+        state: state.trim() || city.trim(),
+        neighborhood: neighborhood.trim(),
+        price_per_month: Number(price),
+        min_stay_months: Number(minStay) || 6,
+        rules: rules.trim() || undefined,
+      });
+
+      // Upload fotos
+      if (photos.length > 0) {
+        for (let i = 0; i < photos.length; i++) {
+          setUploadProgress(`Enviando foto ${i + 1} de ${photos.length}...`);
+          await uploadAndInsertPhoto(photos[i], property.id, i);
+        }
+      }
+
+      queryClient.invalidateQueries({ queryKey: ['properties'] });
+      queryClient.invalidateQueries({ queryKey: ['hostProperties', user.id] });
+
+      setUploadProgress('');
       setLoading(false);
-      Alert.alert('✅ Imóvel publicado!', 'Seu anúncio foi publicado com sucesso e já está visível para estudantes.', [
-        { text: 'Ver painel', onPress: () => router.replace('/host/dashboard') },
-      ]);
-    }, 1500);
+      toast.success('Imóvel publicado! 🎉', 'Seu anúncio já está visível para estudantes.');
+      setTimeout(() => router.replace('/host/dashboard'), 700);
+    } catch (err: any) {
+      setUploadProgress('');
+      setLoading(false);
+      toast.error('Erro ao publicar', err?.message ?? 'Tente novamente.');
+    }
   };
 
   const renderStep = () => {
@@ -108,7 +149,7 @@ export default function NewListingScreen() {
             <Text style={styles.stepTitle}>Onde fica o imóvel?</Text>
             <Text style={styles.stepSubtitle}>Apenas o bairro é exibido publicamente até a reserva ser confirmada</Text>
             <Input label="Cidade *" placeholder="Ex: São Paulo" value={city} onChangeText={setCity} accessibilityLabel="Campo cidade" />
-            <Input label="Estado *" placeholder="Ex: SP" value={state} onChangeText={setState} accessibilityLabel="Campo estado" />
+            <Input label="Estado" placeholder="Ex: SP" value={state} onChangeText={setState} accessibilityLabel="Campo estado" />
             <Input label="Bairro *" placeholder="Ex: Butantã" value={neighborhood} onChangeText={setNeighborhood} accessibilityLabel="Campo bairro" />
           </View>
         );
@@ -197,12 +238,15 @@ export default function NewListingScreen() {
                   : 'Nenhuma selecionada'}
               </Text>
             </View>
-            {rules && (
+            {rules ? (
               <View style={styles.reviewSection}>
                 <Text style={styles.reviewLabel}>Regras</Text>
                 <Text style={styles.reviewValue}>{rules}</Text>
               </View>
-            )}
+            ) : null}
+            {uploadProgress ? (
+              <Text style={styles.progressText}>{uploadProgress}</Text>
+            ) : null}
           </View>
         );
       default:
@@ -212,7 +256,6 @@ export default function NewListingScreen() {
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
-      {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => step > 0 ? setStep(s => s - 1) : router.back()} accessibilityLabel="Voltar">
           <Ionicons name="arrow-back" size={22} color={COLORS.text} />
@@ -223,7 +266,6 @@ export default function NewListingScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* Progress bar */}
       <View style={styles.progressWrapper}>
         <View style={styles.progressBar}>
           <View style={[styles.progressFill, { width: `${((step + 1) / STEPS.length) * 100}%` }]} />
@@ -236,21 +278,26 @@ export default function NewListingScreen() {
         <View style={{ height: 40 }} />
       </ScrollView>
 
-      {/* Footer de navegação */}
       <View style={styles.footer}>
         {step > 0 && (
-          <Button label="Anterior" onPress={() => setStep(s => s - 1)} variant="outline" style={{ flex: 1 }} accessibilityLabel="Etapa anterior" />
+          <Button label="Anterior" onPress={() => setStep(s => s - 1)} variant="outline" style={{ flex: 1 }} disabled={loading} accessibilityLabel="Etapa anterior" />
         )}
         {step < STEPS.length - 1 ? (
           <Button
             label="Próximo"
-            onPress={() => { if (!canGoNext()) { Alert.alert('Atenção', 'Preencha os campos obrigatórios para continuar.'); return; } setStep(s => s + 1); }}
+            onPress={() => {
+              if (!canGoNext()) {
+                toast.error('Campos obrigatórios', 'Preencha os campos marcados com * para continuar.');
+                return;
+              }
+              setStep(s => s + 1);
+            }}
             style={{ flex: 1 }}
             accessibilityLabel="Próxima etapa"
           />
         ) : (
           <Button
-            label="Publicar imóvel"
+            label={loading ? uploadProgress || 'Publicando...' : 'Publicar imóvel'}
             onPress={handlePublish}
             loading={loading}
             style={{ flex: 1 }}
@@ -303,5 +350,6 @@ const styles = StyleSheet.create({
   reviewSection: { marginBottom: 14 },
   reviewLabel: { fontSize: 13, fontWeight: '600', color: COLORS.text, marginBottom: 4 },
   reviewValue: { fontSize: 13, color: COLORS.textSecondary, lineHeight: 20 },
+  progressText: { fontSize: 13, color: COLORS.primary, textAlign: 'center', marginTop: 12, fontWeight: '500' },
   footer: { flexDirection: 'row', gap: 12, padding: SIZES.lg, backgroundColor: COLORS.surface, borderTopWidth: 1, borderTopColor: COLORS.border },
 });

@@ -1,130 +1,33 @@
-// components/ui/index.tsx — Componentes reutilizáveis do StudentNest
+// components/ui/index.tsx — Barrel + componentes utilitários do StudentNest
 
 import React from 'react';
 import {
   View,
   Text,
   TouchableOpacity,
-  ActivityIndicator,
-  TextInput,
   Image,
   StyleSheet,
-  Dimensions,
-  type TextInputProps,
-  type TouchableOpacityProps,
-  type ViewStyle,
+  ViewStyle,
 } from 'react-native';
-import { COLORS, SIZES, STRINGS } from '@/constants';
+import { Ionicons } from '@expo/vector-icons';
+import { COLORS, SIZES, SHADOWS } from '../../constants';
 
-const { width: SCREEN_W } = Dimensions.get('window');
+// Reexporta os componentes canônicos
+export { Button } from './Button';
+export { Input } from './Input';
+export { Badge } from './Badge';
 
-// ─── Button ───────────────────────────────────────────────────────────────────
-interface ButtonProps extends TouchableOpacityProps {
-  label: string;
-  variant?: 'primary' | 'secondary' | 'danger' | 'outline';
-  loading?: boolean;
-  fullWidth?: boolean;
-}
-
-export function Button({
-  label,
-  variant = 'primary',
-  loading = false,
-  fullWidth = true,
-  style,
-  disabled,
-  ...rest
-}: ButtonProps) {
-  const bg =
-    variant === 'primary'   ? COLORS.primary :
-    variant === 'secondary' ? COLORS.neutral100 :
-    variant === 'danger'    ? COLORS.danger :
-    'transparent';
-
-  const textColor =
-    variant === 'primary' ? COLORS.white :
-    variant === 'danger'  ? COLORS.white :
-    variant === 'outline' ? COLORS.primary :
-    COLORS.black;
-
-  const border = variant === 'outline'
-    ? { borderWidth: 1.5, borderColor: COLORS.primary }
-    : {};
-
-  return (
-    <TouchableOpacity
-      accessibilityLabel={label}
-      accessibilityRole="button"
-      disabled={disabled || loading}
-      style={[
-        styles.btn,
-        { backgroundColor: bg, width: fullWidth ? '100%' : undefined, opacity: disabled ? 0.6 : 1 },
-        border,
-        style,
-      ]}
-      {...rest}
-    >
-      {loading ? (
-        <ActivityIndicator color={textColor} size="small" />
-      ) : (
-        <Text style={[styles.btnText, { color: textColor }]}>{label}</Text>
-      )}
-    </TouchableOpacity>
-  );
-}
-
-// ─── Input ────────────────────────────────────────────────────────────────────
-interface InputProps extends TextInputProps {
-  label?: string;
-  error?: string;
-}
-
-export function Input({ label, error, style, ...rest }: InputProps) {
-  return (
-    <View style={styles.inputWrapper}>
-      {label && <Text style={styles.inputLabel}>{label}</Text>}
-      <TextInput
-        style={[
-          styles.input,
-          error ? { borderColor: COLORS.danger } : {},
-          style,
-        ]}
-        placeholderTextColor={COLORS.neutral500}
-        accessibilityLabel={label}
-        {...rest}
-      />
-      {error && <Text style={styles.inputError}>{error}</Text>}
-    </View>
-  );
-}
-
-// ─── Badge ────────────────────────────────────────────────────────────────────
-interface BadgeProps {
-  label: string;
-  color?: string;
-  textColor?: string;
-}
-
-export function Badge({ label, color = COLORS.primary100, textColor = COLORS.primary }: BadgeProps) {
-  return (
-    <View style={[styles.badge, { backgroundColor: color }]}>
-      <Text style={[styles.badgeText, { color: textColor }]}>{label}</Text>
-    </View>
-  );
-}
-
-// ─── StarRating ───────────────────────────────────────────────────────────────
+// ─── StarRating ───────────────────────────────────────────────
 interface StarRatingProps {
   rating: number;
   size?: number;
   showValue?: boolean;
   totalReviews?: number;
 }
-
 export function StarRating({ rating, size = 14, showValue = true, totalReviews }: StarRatingProps) {
   return (
     <View style={styles.starRow}>
-      <Text style={{ fontSize: size, color: COLORS.accent }}>★</Text>
+      <Ionicons name="star" size={size} color={COLORS.star} />
       {showValue && (
         <Text style={[styles.starText, { fontSize: size }]}>
           {rating?.toFixed(1) ?? '—'}
@@ -135,13 +38,12 @@ export function StarRating({ rating, size = 14, showValue = true, totalReviews }
   );
 }
 
-// ─── Avatar ───────────────────────────────────────────────────────────────────
+// ─── Avatar ───────────────────────────────────────────────────
 interface AvatarProps {
   uri?: string | null;
   name?: string;
   size?: number;
 }
-
 export function Avatar({ uri, name, size = 44 }: AvatarProps) {
   const initials = name
     ? name.split(' ').map((w) => w[0]).slice(0, 2).join('').toUpperCase()
@@ -156,196 +58,114 @@ export function Avatar({ uri, name, size = 44 }: AvatarProps) {
       />
     );
   }
-
   return (
-    <View
-      style={[
-        styles.avatarFallback,
-        { width: size, height: size, borderRadius: size / 2 },
-      ]}
-    >
+    <View style={[styles.avatarFallback, { width: size, height: size, borderRadius: size / 2 }]}>
       <Text style={[styles.avatarInitials, { fontSize: size * 0.38 }]}>{initials}</Text>
     </View>
   );
 }
 
-// ─── Skeleton ─────────────────────────────────────────────────────────────────
-interface SkeletonProps {
-  width?: number | string;
-  height?: number;
-  radius?: number;
-  style?: ViewStyle;
+// ─── Chip ─────────────────────────────────────────────────────
+interface ChipProps {
+  label: string;
+  icon?: keyof typeof Ionicons.glyphMap;
+  selected?: boolean;
+  onPress?: () => void;
 }
-
-export function Skeleton({ width = '100%', height = 16, radius = SIZES.radiusSm, style }: SkeletonProps) {
+export function Chip({ label, icon, selected, onPress }: ChipProps) {
   return (
-    <View
-      style={[
-        styles.skeleton,
-        { width: width as any, height, borderRadius: radius },
-        style,
-      ]}
-    />
+    <TouchableOpacity
+      style={[styles.chip, selected && styles.chipSelected]}
+      onPress={onPress}
+      activeOpacity={0.8}
+      accessibilityLabel={label}
+    >
+      {icon && <Ionicons name={icon} size={15} color={selected ? COLORS.white : COLORS.text} />}
+      <Text style={[styles.chipText, selected && styles.chipTextSelected]}>{label}</Text>
+    </TouchableOpacity>
   );
 }
 
-// ─── PropertyCardSkeleton ─────────────────────────────────────────────────────
-export function PropertyCardSkeleton() {
-  return (
-    <View style={styles.skeletonCard}>
-      <Skeleton height={160} radius={SIZES.radius} />
-      <Skeleton width="70%" height={14} style={{ marginTop: 8 }} />
-      <Skeleton width="45%" height={12} style={{ marginTop: 6 }} />
-      <Skeleton width="30%" height={12} style={{ marginTop: 6 }} />
-    </View>
-  );
-}
-
-// ─── SectionHeader ────────────────────────────────────────────────────────────
+// ─── SectionHeader ────────────────────────────────────────────
 interface SectionHeaderProps {
   title: string;
   onSeeAll?: () => void;
 }
-
 export function SectionHeader({ title, onSeeAll }: SectionHeaderProps) {
   return (
     <View style={styles.sectionHeader}>
       <Text style={styles.sectionTitle}>{title}</Text>
       {onSeeAll && (
-        <TouchableOpacity
-          onPress={onSeeAll}
-          accessibilityLabel={`Ver todos de ${title}`}
-          accessibilityRole="button"
-        >
-          <Text style={styles.seeAll}>{STRINGS.seeAll}</Text>
+        <TouchableOpacity onPress={onSeeAll} accessibilityRole="button" accessibilityLabel={`Ver todos de ${title}`}>
+          <Text style={styles.seeAll}>Ver todos</Text>
         </TouchableOpacity>
       )}
     </View>
   );
 }
 
-// ─── EmptyState ───────────────────────────────────────────────────────────────
+// ─── EmptyState ───────────────────────────────────────────────
 interface EmptyStateProps {
   message: string;
-  icon?: string;
+  title?: string;
+  icon?: keyof typeof Ionicons.glyphMap;
 }
-
-export function EmptyState({ message }: EmptyStateProps) {
+export function EmptyState({ message, title, icon = 'sad-outline' }: EmptyStateProps) {
   return (
     <View style={styles.empty}>
+      <View style={styles.emptyIcon}>
+        <Ionicons name={icon} size={40} color={COLORS.textLight} />
+      </View>
+      {title && <Text style={styles.emptyTitle}>{title}</Text>}
       <Text style={styles.emptyText}>{message}</Text>
     </View>
   );
 }
 
-// ─── Divider ─────────────────────────────────────────────────────────────────
-export function Divider() {
-  return <View style={styles.divider} />;
+// ─── Divider ──────────────────────────────────────────────────
+export function Divider({ style }: { style?: ViewStyle }) {
+  return <View style={[styles.divider, style]} />;
 }
 
-// ─── Styles ───────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
-  btn: {
-    paddingVertical: 14,
-    paddingHorizontal: 20,
-    borderRadius: SIZES.radius,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  btnText: {
-    fontSize: 15,
-    fontWeight: '600',
-  },
-  inputWrapper: {
-    marginBottom: SIZES.md,
-  },
-  inputLabel: {
-    fontSize: 13,
-    fontWeight: '500',
-    color: COLORS.neutral700,
-    marginBottom: 6,
-  },
-  input: {
-    height: 48,
-    borderRadius: SIZES.radius,
-    borderWidth: 1,
-    borderColor: COLORS.neutral300,
-    paddingHorizontal: SIZES.md,
-    fontSize: 15,
-    color: COLORS.black,
-    backgroundColor: COLORS.white,
-  },
-  inputError: {
-    fontSize: 12,
-    color: COLORS.danger,
-    marginTop: 4,
-  },
-  badge: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 20,
-    alignSelf: 'flex-start',
-  },
-  badgeText: {
-    fontSize: 11,
-    fontWeight: '600',
-  },
-  starRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 3,
-  },
-  starText: {
-    color: COLORS.neutral700,
-    fontWeight: '500',
-  },
+  starRow: { flexDirection: 'row', alignItems: 'center', gap: 3 },
+  starText: { color: COLORS.text, fontWeight: '600' },
   avatarFallback: {
     backgroundColor: COLORS.primary,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  avatarInitials: {
-    color: COLORS.white,
-    fontWeight: '700',
+  avatarInitials: { color: COLORS.white, fontWeight: '700' },
+  chip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+    borderRadius: SIZES.radiusFull,
+    borderWidth: 1,
+    borderColor: COLORS.borderDark,
+    backgroundColor: COLORS.surface,
   },
-  skeleton: {
-    backgroundColor: COLORS.neutral200,
-  },
-  skeletonCard: {
-    padding: SIZES.md,
-    backgroundColor: COLORS.white,
-    borderRadius: SIZES.radius,
-    marginBottom: SIZES.md,
-  },
+  chipSelected: { backgroundColor: COLORS.text, borderColor: COLORS.text },
+  chipText: { fontSize: 13, fontWeight: '600', color: COLORS.text },
+  chipTextSelected: { color: COLORS.white },
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: SIZES.md,
+    paddingHorizontal: SIZES.lg,
     marginBottom: SIZES.sm,
   },
-  sectionTitle: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: COLORS.black,
+  sectionTitle: { fontSize: 18, fontWeight: '800', color: COLORS.text },
+  seeAll: { fontSize: 14, color: COLORS.primary, fontWeight: '600' },
+  empty: { padding: SIZES.xl, alignItems: 'center' },
+  emptyIcon: {
+    width: 84, height: 84, borderRadius: 42,
+    backgroundColor: COLORS.surfaceSecondary,
+    alignItems: 'center', justifyContent: 'center', marginBottom: 16,
   },
-  seeAll: {
-    fontSize: 13,
-    color: COLORS.primary,
-    fontWeight: '500',
-  },
-  empty: {
-    padding: SIZES.xl,
-    alignItems: 'center',
-  },
-  emptyText: {
-    color: COLORS.neutral600,
-    fontSize: 15,
-    textAlign: 'center',
-  },
-  divider: {
-    height: 1,
-    backgroundColor: COLORS.neutral200,
-    marginVertical: SIZES.sm,
-  },
+  emptyTitle: { fontSize: 18, fontWeight: '700', color: COLORS.text, marginBottom: 6 },
+  emptyText: { color: COLORS.textSecondary, fontSize: 14, textAlign: 'center', lineHeight: 20 },
+  divider: { height: 1, backgroundColor: COLORS.border, marginVertical: SIZES.sm },
 });

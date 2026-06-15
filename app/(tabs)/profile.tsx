@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Alert,
 } from 'react-native';
@@ -6,8 +6,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { useAuthStore } from '../../stores/authStore';
+import { toast } from '../../lib/toast';
 import { COLORS, SIZES, STRINGS } from '../../constants';
-import { Button } from '../../components/ui/Button';
 
 interface MenuItemProps {
   icon: string;
@@ -35,9 +35,19 @@ export default function ProfileScreen() {
   const handleLogout = () => {
     Alert.alert(STRINGS.confirmLogout, '', [
       { text: STRINGS.cancel, style: 'cancel' },
-      { text: 'Sair', style: 'destructive', onPress: () => { logout(); router.replace('/(auth)/login'); } },
+      {
+        text: 'Sair',
+        style: 'destructive',
+        onPress: () => {
+          logout();
+          toast.success('Até logo! 👋', 'Você saiu da sua conta.');
+          router.replace('/(auth)/login');
+        },
+      },
     ]);
   };
+
+  const comingSoon = () => toast.info('Em breve 🚧', 'Esta função ainda está em construção.');
 
   const isHost = user?.user_type === 'host';
 
@@ -74,7 +84,7 @@ export default function ProfileScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Minha conta</Text>
           <View style={styles.card}>
-            <MenuItem icon="create-outline" label="Editar perfil" onPress={() => {}} />
+            <MenuItem icon="create-outline" label="Editar perfil" onPress={comingSoon} />
             {!isHost && (
               <MenuItem icon="calendar-outline" label={STRINGS.myBookings} onPress={() => router.push('/booking/list')} />
             )}
@@ -91,9 +101,9 @@ export default function ProfileScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Suporte</Text>
           <View style={styles.card}>
-            <MenuItem icon="help-circle-outline" label="Central de ajuda" onPress={() => {}} />
-            <MenuItem icon="flag-outline" label="Fazer uma denúncia" onPress={() => {}} />
-            <MenuItem icon="document-text-outline" label="Termos de uso" onPress={() => {}} />
+            <MenuItem icon="help-circle-outline" label="Central de ajuda" onPress={comingSoon} />
+            <MenuItem icon="flag-outline" label="Fazer uma denúncia" onPress={comingSoon} />
+            <MenuItem icon="document-text-outline" label="Termos de uso" onPress={comingSoon} />
           </View>
         </View>
 
@@ -137,7 +147,7 @@ const styles = StyleSheet.create({
   sectionTitle: { fontSize: 13, fontWeight: '600', color: COLORS.textSecondary, marginBottom: 8, letterSpacing: 0.5 },
   card: { backgroundColor: COLORS.surface, borderRadius: SIZES.radiusMd, overflow: 'hidden', borderWidth: 1, borderColor: COLORS.border },
   menuItem: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderBottomWidth: 1, borderBottomColor: COLORS.border },
-  menuIcon: { width: 36, height: 36, borderRadius: 10, backgroundColor: '#E8F4FD', alignItems: 'center', justifyContent: 'center' },
+  menuIcon: { width: 36, height: 36, borderRadius: 10, backgroundColor: COLORS.primaryTint, alignItems: 'center', justifyContent: 'center' },
   menuIconDanger: { backgroundColor: COLORS.errorLight },
   menuLabel: { flex: 1, fontSize: 15, color: COLORS.text },
   menuLabelDanger: { color: COLORS.error },

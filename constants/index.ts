@@ -1,41 +1,75 @@
 // ============================================================
-// CONSTANTES DO STUDENTNEST
+// DESIGN SYSTEM DO STUDENTNEST — inspirado no Airbnb
 // ============================================================
 
 export const COLORS = {
-  primary: '#1B4F72',
-  primaryLight: '#2E86C1',
-  primaryDark: '#154360',
-  secondary: '#F39C12',
-  secondaryLight: '#F9C74F',
-  accent: '#27AE60',
-  background: '#F8F9FA',
+  // Marca (coral "rausch" estilo Airbnb)
+  primary: '#FF385C',
+  primaryLight: '#FF6B81',
+  primaryDark: '#D70466',
+  primaryTint: '#FFF0F2',      // fundo suave coral (substitui o antigo azul claro)
+
+  // Secundária / acentos
+  secondary: '#FF9F1C',
+  secondaryLight: '#FFD166',
+  accent: '#00A699',           // teal Airbnb (verificado / destaques)
+  accentTint: '#E6F7F5',
+
+  // Superfícies
+  background: '#F7F7F8',
   surface: '#FFFFFF',
-  surfaceSecondary: '#F1F3F5',
-  text: '#1A1A2E',
-  textSecondary: '#6C757D',
-  textLight: '#ADB5BD',
-  border: '#DEE2E6',
-  error: '#E74C3C',
-  errorLight: '#FADBD8',
-  success: '#27AE60',
-  successLight: '#D5F5E3',
-  warning: '#F39C12',
-  warningLight: '#FDEBD0',
-  pending: '#F39C12',
-  confirmed: '#27AE60',
-  cancelled: '#E74C3C',
-  completed: '#6C757D',
+  surfaceSecondary: '#F2F3F5',
+
+  // Texto
+  text: '#222222',
+  textSecondary: '#717171',
+  textLight: '#B0B0B0',
+
+  // Bordas
+  border: '#EBEBEB',
+  borderDark: '#DDDDDD',
+
+  // Status / feedback
+  error: '#E11900',
+  errorLight: '#FDECEA',
+  success: '#008A05',
+  successLight: '#E3F6E5',
+  warning: '#F5A623',
+  warningLight: '#FEF3E2',
+  info: '#2E86C1',
+  infoLight: '#E8F2FB',
+
+  // Status de reserva
+  pending: '#F5A623',
+  confirmed: '#008A05',
+  cancelled: '#E11900',
+  completed: '#717171',
+
+  // Diversos
+  star: '#FFB400',
   white: '#FFFFFF',
-  black: '#000000',
+  black: '#1A1A1A',
   overlay: 'rgba(0,0,0,0.5)',
+
+  // Escala neutra (compat. com componentes utilitários)
+  neutral100: '#F2F3F5',
+  neutral200: '#EBEBEB',
+  neutral300: '#DDDDDD',
+  neutral400: '#CED4DA',
+  neutral500: '#B0B0B0',
+  neutral600: '#717171',
+  neutral700: '#484848',
+  neutral800: '#343A40',
+  neutral900: '#222222',
+  primary100: '#FFE2E7',
+  danger: '#E11900',
 };
 
 export const FONTS = {
-  regular: 400,
-  medium: 500,
-  semibold: 600,
-  bold: 700,
+  regular: '400' as const,
+  medium: '500' as const,
+  semibold: '600' as const,
+  bold: '700' as const,
 };
 
 export const SIZES = {
@@ -45,11 +79,37 @@ export const SIZES = {
   lg: 24,
   xl: 32,
   xxl: 48,
-  radius: 8,
-  radiusMd: 12,
-  radiusLg: 16,
+  radiusSm: 6,
+  radius: 10,
+  radiusMd: 14,
+  radiusLg: 18,
   radiusXl: 24,
   radiusFull: 999,
+};
+
+// Sombras consistentes (iOS + Android)
+export const SHADOWS = {
+  sm: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  md: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 14,
+    elevation: 5,
+  },
+  lg: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.14,
+    shadowRadius: 24,
+    elevation: 10,
+  },
 };
 
 export const PROPERTY_TYPES = [
@@ -72,8 +132,9 @@ export const STRINGS = {
   loading: 'Carregando...',
   error: 'Algo deu errado. Tente novamente.',
   noResults: 'Nenhum resultado encontrado.',
+  seeAll: 'Ver todos',
   loginTitle: 'Bem-vindo de volta',
-  loginSubtitle: 'Entre na sua conta',
+  loginSubtitle: 'Entre na sua conta para continuar',
   registerTitle: 'Criar conta',
   registerSubtitle: 'Junte-se ao StudentNest',
   emailLabel: 'E-mail',

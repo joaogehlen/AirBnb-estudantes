@@ -325,3 +325,9 @@ CREATE POLICY "Fotos públicas" ON storage.objects FOR SELECT USING (bucket_id =
 CREATE POLICY "Upload de avatar" ON storage.objects FOR INSERT
   WITH CHECK (bucket_id = 'avatars' AND auth.uid()::text = (storage.foldername(name))[1]);
 CREATE POLICY "Avatares públicos" ON storage.objects FOR SELECT USING (bucket_id = 'avatars');
+
+-- ----------------------------------------------------------------
+-- REALTIME — habilita escuta de mensagens em tempo real
+-- ----------------------------------------------------------------
+ALTER PUBLICATION supabase_realtime ADD TABLE messages;
+ALTER PUBLICATION supabase_realtime ADD TABLE conversations;

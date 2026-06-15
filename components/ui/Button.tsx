@@ -4,10 +4,12 @@ import {
   Text,
   StyleSheet,
   ActivityIndicator,
+  View,
   ViewStyle,
   TextStyle,
 } from 'react-native';
-import { COLORS, SIZES } from '../../constants';
+import { Ionicons } from '@expo/vector-icons';
+import { COLORS, SIZES, SHADOWS } from '../../constants';
 
 interface ButtonProps {
   label: string;
@@ -16,6 +18,7 @@ interface ButtonProps {
   size?: 'sm' | 'md' | 'lg';
   disabled?: boolean;
   loading?: boolean;
+  icon?: keyof typeof Ionicons.glyphMap;
   style?: ViewStyle;
   textStyle?: TextStyle;
   accessibilityLabel?: string;
@@ -28,14 +31,18 @@ export function Button({
   size = 'md',
   disabled,
   loading,
+  icon,
   style,
   textStyle,
   accessibilityLabel,
 }: ButtonProps) {
+  const isSolid = variant === 'primary' || variant === 'secondary' || variant === 'danger';
+
   const btnStyle = [
     styles.base,
     styles[variant],
     styles[`size_${size}`],
+    isSolid && SHADOWS.sm,
     (disabled || loading) && styles.disabled,
     style,
   ];
@@ -47,6 +54,9 @@ export function Button({
     textStyle,
   ];
 
+  const contentColor =
+    variant === 'outline' || variant === 'ghost' ? COLORS.primary : COLORS.white;
+
   return (
     <TouchableOpacity
       style={btnStyle}
@@ -54,12 +64,15 @@ export function Button({
       disabled={disabled || loading}
       accessibilityLabel={accessibilityLabel || label}
       accessibilityRole="button"
-      activeOpacity={0.8}
+      activeOpacity={0.85}
     >
       {loading ? (
-        <ActivityIndicator color={variant === 'primary' ? COLORS.white : COLORS.primary} size="small" />
+        <ActivityIndicator color={contentColor} size="small" />
       ) : (
-        <Text style={txtStyle}>{label}</Text>
+        <View style={styles.content}>
+          {icon && <Ionicons name={icon} size={size === 'sm' ? 16 : 18} color={contentColor} />}
+          <Text style={txtStyle}>{label}</Text>
+        </View>
       )}
     </TouchableOpacity>
   );
@@ -67,28 +80,29 @@ export function Button({
 
 const styles = StyleSheet.create({
   base: {
-    borderRadius: SIZES.radius,
+    borderRadius: SIZES.radiusMd,
     alignItems: 'center',
     justifyContent: 'center',
     flexDirection: 'row',
   },
+  content: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   // Variantes
   primary: { backgroundColor: COLORS.primary },
   secondary: { backgroundColor: COLORS.secondary },
-  outline: { backgroundColor: 'transparent', borderWidth: 1.5, borderColor: COLORS.primary },
+  outline: { backgroundColor: 'transparent', borderWidth: 1.5, borderColor: COLORS.borderDark },
   ghost: { backgroundColor: 'transparent' },
   danger: { backgroundColor: COLORS.error },
   // Tamanhos
-  size_sm: { paddingVertical: 6, paddingHorizontal: 14 },
-  size_md: { paddingVertical: 13, paddingHorizontal: 20 },
-  size_lg: { paddingVertical: 16, paddingHorizontal: 24 },
+  size_sm: { paddingVertical: 9, paddingHorizontal: 16 },
+  size_md: { paddingVertical: 15, paddingHorizontal: 22 },
+  size_lg: { paddingVertical: 17, paddingHorizontal: 26 },
   // Estado desabilitado
-  disabled: { opacity: 0.5 },
+  disabled: { opacity: 0.45 },
   // Texto
-  text: { fontWeight: '600' },
+  text: { fontWeight: '700', letterSpacing: 0.2 },
   text_primary: { color: COLORS.white },
   text_secondary: { color: COLORS.white },
-  text_outline: { color: COLORS.primary },
+  text_outline: { color: COLORS.text },
   text_ghost: { color: COLORS.primary },
   text_danger: { color: COLORS.white },
   textSize_sm: { fontSize: 13 },

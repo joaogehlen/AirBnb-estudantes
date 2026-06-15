@@ -1,43 +1,76 @@
 import React, { useState } from 'react';
 import {
-  View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Image,
+  View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '../../components/ui/Button';
-import { MOCK_PROPERTIES } from '../../lib/mockData';
+import { fetchProperty, createBooking } from '../../lib/api';
+import { useAuthStore } from '../../stores/authStore';
+import { toast } from '../../lib/toast';
 import { COLORS, SIZES } from '../../constants';
 import { formatCurrency, addMonths, formatDate } from '../../lib/helpers';
 
 export default function BookingScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const property = MOCK_PROPERTIES.find((p) => p.id === id) || MOCK_PROPERTIES[0];
+  const { user } = useAuthStore();
+  const queryClient = useQueryClient();
 
-  const [months, setMonths] = useState(property.min_stay_months);
-  const [loading, setLoading] = useState(false);
+  const { data: property, isLoading } = useQuery({
+    queryKey: ['property', id],
+    queryFn: () => fetchProperty(id!),
+    enabled: !!id,
+  });
+
+  const [months, setMonths] = useState<number | null>(null);
+
+  const minStay = property?.min_stay_months ?? 1;
+  const currentMonths = months ?? minStay;
 
   const today = new Date().toISOString().split('T')[0];
-  const checkOut = addMonths(today, months);
-  const totalPrice = property.price_per_month * months;
-  const serviceFee = totalPrice * 0.05; // 5% taxa de serviço
+  const checkOut = addMonths(today, currentMonths);
+  const totalPrice = (property?.price_per_month ?? 0) * currentMonths;
+  const serviceFee = totalPrice * 0.05;
   const totalWithFee = totalPrice + serviceFee;
 
-  const handleConfirm = () => {
-    setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      Alert.alert(
-        '✅ Solicitação enviada!',
-        `Sua solicitação foi enviada para ${property.host?.full_name}. Você receberá uma confirmação em breve.`,
-        [{ text: 'Ver minhas reservas', onPress: () => router.replace('/booking/list') }],
+  const { mutate: submitBooking, isPending } = useMutation({
+    mutationFn: () =>
+      createBooking({
+        property_id: property!.id,
+        student_id: user!.id,
+        host_id: property!.host_id,
+        check_in: today,
+        check_out: checkOut,
+        months: currentMonths,
+        total_price: Math.round(totalWithFee * 100) / 100,
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['studentBookings', user?.id] });
+      toast.success(
+        'Solicitação enviada! 🎉',
+        `Enviamos seu pedido para ${property?.host?.full_name ?? 'o anfitrião'}. Aguarde a confirmação.`,
       );
-    }, 1500);
-  };
+      setTimeout(() => router.replace('/booking/list'), 700);
+    },
+    onError: (err: any) => {
+      toast.error('Erro ao reservar', err?.message ?? 'Não foi possível enviar a reserva. Tente novamente.');
+    },
+  });
+
+  if (isLoading || !property) {
+    return (
+      <View style={styles.loader}>
+        <ActivityIndicator size="large" color={COLORS.primary} />
+      </View>
+    );
+  }
+
+  const coverPhoto = property.photos?.find(p => p.is_cover)?.url ?? property.photos?.[0]?.url;
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
-      {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} accessibilityLabel="Voltar">
           <Ionicons name="arrow-back" size={22} color={COLORS.text} />
@@ -49,13 +82,13 @@ export default function BookingScreen() {
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         {/* Resumo do imóvel */}
         <View style={styles.propertyCard}>
-          {property.photos?.[0] && (
-            <Image source={{ uri: property.photos[0].url }} style={styles.propertyImage} resizeMode="cover" />
+          {coverPhoto && (
+            <Image source={{ uri: coverPhoto }} style={styles.propertyImage} resizeMode="cover" />
           )}
           <View style={styles.propertyInfo}>
             <Text style={styles.propertyTitle} numberOfLines={2}>{property.title}</Text>
             <Text style={styles.propertyLocation}>{property.neighborhood}, {property.city}</Text>
-            {property.average_rating !== undefined && (
+            {property.average_rating !== undefined && property.average_rating > 0 && (
               <View style={styles.ratingRow}>
                 <Ionicons name="star" size={13} color={COLORS.secondary} />
                 <Text style={styles.ratingText}>{property.average_rating.toFixed(1)}</Text>
@@ -66,30 +99,30 @@ export default function BookingScreen() {
 
         <View style={styles.divider} />
 
-        {/* Seletor de duração */}
+        {/* Seletor de meses */}
         <Text style={styles.sectionTitle}>Duração da estadia</Text>
         <View style={styles.monthSelector}>
           <TouchableOpacity
-            style={[styles.monthBtn, months <= property.min_stay_months && styles.monthBtnDisabled]}
-            onPress={() => setMonths((m) => Math.max(property.min_stay_months, m - 1))}
-            disabled={months <= property.min_stay_months}
+            style={[styles.monthBtn, currentMonths <= minStay && styles.monthBtnDisabled]}
+            onPress={() => setMonths(Math.max(minStay, currentMonths - 1))}
+            disabled={currentMonths <= minStay}
             accessibilityLabel="Diminuir meses"
           >
-            <Ionicons name="remove" size={22} color={months <= property.min_stay_months ? COLORS.textLight : COLORS.primary} />
+            <Ionicons name="remove" size={22} color={currentMonths <= minStay ? COLORS.textLight : COLORS.primary} />
           </TouchableOpacity>
           <View style={styles.monthCount}>
-            <Text style={styles.monthValue}>{months}</Text>
+            <Text style={styles.monthValue}>{currentMonths}</Text>
             <Text style={styles.monthLabel}>meses</Text>
           </View>
           <TouchableOpacity
             style={styles.monthBtn}
-            onPress={() => setMonths((m) => Math.min(24, m + 1))}
+            onPress={() => setMonths(Math.min(24, currentMonths + 1))}
             accessibilityLabel="Aumentar meses"
           >
             <Ionicons name="add" size={22} color={COLORS.primary} />
           </TouchableOpacity>
         </View>
-        <Text style={styles.minStayNote}>Estadia mínima: {property.min_stay_months} meses</Text>
+        <Text style={styles.minStayNote}>Estadia mínima: {minStay} meses</Text>
 
         <View style={styles.divider} />
 
@@ -113,7 +146,7 @@ export default function BookingScreen() {
         <Text style={styles.sectionTitle}>Resumo de valores</Text>
         <View style={styles.priceBreakdown}>
           <View style={styles.priceRow}>
-            <Text style={styles.priceRowLabel}>{formatCurrency(property.price_per_month)} × {months} meses</Text>
+            <Text style={styles.priceRowLabel}>{formatCurrency(property.price_per_month)} × {currentMonths} meses</Text>
             <Text style={styles.priceRowValue}>{formatCurrency(totalPrice)}</Text>
           </View>
           <View style={styles.priceRow}>
@@ -127,7 +160,6 @@ export default function BookingScreen() {
           </View>
         </View>
 
-        {/* Aviso de política */}
         <View style={styles.notice}>
           <Ionicons name="information-circle-outline" size={18} color={COLORS.primaryLight} />
           <Text style={styles.noticeText}>
@@ -137,8 +169,8 @@ export default function BookingScreen() {
 
         <Button
           label="Enviar solicitação de reserva"
-          onPress={handleConfirm}
-          loading={loading}
+          onPress={() => submitBooking()}
+          loading={isPending}
           style={styles.confirmBtn}
           accessibilityLabel="Confirmar reserva"
         />
@@ -149,6 +181,7 @@ export default function BookingScreen() {
 }
 
 const styles = StyleSheet.create({
+  loader: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: COLORS.background },
   safe: { flex: 1, backgroundColor: COLORS.background },
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
@@ -183,7 +216,7 @@ const styles = StyleSheet.create({
   priceDivider: { height: 1, backgroundColor: COLORS.border, marginVertical: 10 },
   priceTotalLabel: { fontSize: 16, fontWeight: '700', color: COLORS.text },
   priceTotalValue: { fontSize: 18, fontWeight: '700', color: COLORS.primary },
-  notice: { flexDirection: 'row', gap: 10, backgroundColor: '#E8F4FD', borderRadius: SIZES.radius, padding: 14, marginTop: 16, marginBottom: 20 },
+  notice: { flexDirection: 'row', gap: 10, backgroundColor: COLORS.primaryTint, borderRadius: SIZES.radius, padding: 14, marginTop: 16, marginBottom: 20 },
   noticeText: { flex: 1, fontSize: 13, color: COLORS.text, lineHeight: 20 },
   confirmBtn: {},
 });

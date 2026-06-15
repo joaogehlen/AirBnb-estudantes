@@ -1,36 +1,67 @@
 import { useEffect } from 'react';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Stack, router, useSegments } from 'expo-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { StatusBar } from 'expo-status-bar';
+import Toast from 'react-native-toast-message';
 import { useAuthStore } from '../stores/authStore';
-import { COLORS } from '../constants';
+import { useFavoritesStore } from '../stores/favoritesStore';
+import { supabase } from '../lib/supabase';
+import { fetchProfile } from '../lib/api';
+import { toastConfig } from '../components/ui/ToastConfig';
 
 const queryClient = new QueryClient({
   defaultOptions: {
-    queries: { retry: 2, staleTime: 1000 * 60 * 5 }, // 5 min cache
+    queries: { retry: 1, staleTime: 1000 * 60 * 5 },
   },
 });
 
-// Usuário mock para desenvolvimento (remova ao integrar Supabase)
-const MOCK_USER = {
-  id: 'current_user',
-  full_name: 'João Silva',
-  avatar_url: 'https://i.pravatar.cc/150?img=12',
-  user_type: 'student' as const,
-  university_email: 'joao@usp.br',
-  is_verified: true,
-  bio: 'Estudante de Engenharia na USP.',
-  phone: '11988887777',
-  created_at: '2023-08-01',
-};
-
 function AuthGuard() {
-  const { isAuthenticated, isLoading, setUser } = useAuthStore();
+  const { isAuthenticated, isLoading, setUser, setLoading } = useAuthStore();
+  const { loadFavorites, clearFavorites } = useFavoritesStore();
   const segments = useSegments();
 
-  // Inicializa com usuário mock (simula sessão ativa)
   useEffect(() => {
-    setUser(MOCK_USER);
+    // Verifica sessão existente ao abrir o app
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (session?.user) {
+        try {
+          const profile = await fetchProfile(session.user.id);
+          setUser(profile);
+          if (profile.user_type === 'student') {
+            loadFavorites(session.user.id);
+          }
+        } catch {
+          setUser(null);
+        }
+      } else {
+        setLoading(false);
+      }
+    });
+
+    // Escuta mudanças de autenticação
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (event === 'SIGNED_IN' && session?.user) {
+          try {
+            const profile = await fetchProfile(session.user.id);
+            setUser(profile);
+            if (profile.user_type === 'student') {
+              loadFavorites(session.user.id);
+            }
+          } catch {
+            setUser(null);
+          }
+        } else if (event === 'SIGNED_OUT') {
+          setUser(null);
+          clearFavorites();
+          queryClient.clear();
+        }
+      }
+    );
+
+    return () => subscription.unsubscribe();
   }, []);
 
   useEffect(() => {
@@ -48,29 +79,24 @@ function AuthGuard() {
 
 export default function RootLayout() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <StatusBar style="light" backgroundColor={COLORS.primary} />
-      <AuthGuard />
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="(auth)" />
-        <Stack.Screen name="(tabs)" />
-        <Stack.Screen
-          name="listing/[id]"
-          options={{ headerShown: false, animation: 'slide_from_right' }}
-        />
-        <Stack.Screen
-          name="booking/[id]"
-          options={{ headerShown: false, animation: 'slide_from_bottom' }}
-        />
-        <Stack.Screen
-          name="host/dashboard"
-          options={{ headerShown: false, animation: 'slide_from_right' }}
-        />
-        <Stack.Screen
-          name="host/new-listing"
-          options={{ headerShown: false, animation: 'slide_from_bottom' }}
-        />
-      </Stack>
-    </QueryClientProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaProvider>
+        <QueryClientProvider client={queryClient}>
+          <StatusBar style="dark" />
+          <AuthGuard />
+          <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#F7F7F8' } }}>
+            <Stack.Screen name="(auth)" />
+            <Stack.Screen name="(tabs)" />
+            <Stack.Screen name="listing/[id]" options={{ animation: 'slide_from_right' }} />
+            <Stack.Screen name="booking/[id]" options={{ animation: 'slide_from_bottom' }} />
+            <Stack.Screen name="booking/list" options={{ animation: 'slide_from_right' }} />
+            <Stack.Screen name="host/dashboard" options={{ animation: 'slide_from_right' }} />
+            <Stack.Screen name="host/new-listing" options={{ animation: 'slide_from_bottom' }} />
+            <Stack.Screen name="chat/[id]" options={{ animation: 'slide_from_right' }} />
+          </Stack>
+          <Toast config={toastConfig} topOffset={56} />
+        </QueryClientProvider>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }

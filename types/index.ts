@@ -114,6 +114,7 @@ export interface Message {
   content: string;
   is_read: boolean;
   created_at: string;
+  sender?: Profile;
 }
 
 export interface SearchFilters {

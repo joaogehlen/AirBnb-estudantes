@@ -7,15 +7,15 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useQuery } from '@tanstack/react-query';
 import { PropertyCard } from '../../components/cards/PropertyCard';
 import { useAuthStore } from '../../stores/authStore';
-import { MOCK_PROPERTIES } from '../../lib/mockData';
+import { fetchProperties } from '../../lib/api';
 import { COLORS, SIZES, STRINGS } from '../../constants';
 import { Property } from '../../types';
 
 const { width } = Dimensions.get('window');
 
-// Skeleton de loading
 function CardSkeleton() {
   return (
     <View style={skeletonStyles.card}>
@@ -34,27 +34,36 @@ const skeletonStyles = StyleSheet.create({
 export default function HomeScreen() {
   const { user } = useAuthStore();
   const [search, setSearch] = useState('');
-  const [refreshing, setRefreshing] = useState(false);
-  const [loading, setLoading] = useState(false);
 
-  const topRated = [...MOCK_PROPERTIES].sort((a, b) => (b.average_rating || 0) - (a.average_rating || 0)).slice(0, 3);
-  const republics = MOCK_PROPERTIES.filter((p) => p.type === 'republic');
-  const nearUniversity = MOCK_PROPERTIES.slice(0, 4);
+  const { data: allProperties = [], isLoading, refetch, isRefetching } = useQuery({
+    queryKey: ['properties'],
+    queryFn: () => fetchProperties(),
+  });
 
-  const onRefresh = () => {
-    setRefreshing(true);
-    setTimeout(() => setRefreshing(false), 1000);
-  };
+  const topRated = [...allProperties]
+    .sort((a, b) => (b.average_rating || 0) - (a.average_rating || 0))
+    .slice(0, 3);
+  const republics = allProperties.filter((p) => p.type === 'republic');
+  const nearUniversity = allProperties.slice(0, 4);
 
   const handleSearch = () => {
     router.push({ pathname: '/(tabs)/search', params: { city: search } });
   };
 
+  const renderSkeletons = () =>
+    Array(3).fill(null).map((_, i) => <CardSkeleton key={i} />);
+
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <ScrollView
         showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[COLORS.primary]} />}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefetching}
+            onRefresh={refetch}
+            colors={[COLORS.primary]}
+          />
+        }
       >
         {/* Header */}
         <LinearGradient colors={[COLORS.primaryDark, COLORS.primary]} style={styles.header}>
@@ -63,7 +72,7 @@ export default function HomeScreen() {
               <Text style={styles.greeting}>Olá, {user?.full_name?.split(' ')[0]} 👋</Text>
               <View style={styles.locationRow}>
                 <Ionicons name="location-outline" size={14} color="rgba(255,255,255,0.8)" />
-                <Text style={styles.locationText}>São Paulo, SP</Text>
+                <Text style={styles.locationText}>Brasil</Text>
               </View>
             </View>
             <TouchableOpacity style={styles.notifBtn} accessibilityLabel="Notificações">
@@ -72,7 +81,6 @@ export default function HomeScreen() {
             </TouchableOpacity>
           </View>
 
-          {/* Barra de busca */}
           <View style={styles.searchBox}>
             <Ionicons name="search-outline" size={18} color={COLORS.textSecondary} />
             <TextInput
@@ -119,54 +127,65 @@ export default function HomeScreen() {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>{STRINGS.nearUniversity}</Text>
-            <TouchableOpacity onPress={() => router.push('/(tabs)/search')} accessibilityLabel="Ver todos os imóveis próximos">
+            <TouchableOpacity onPress={() => router.push('/(tabs)/search')} accessibilityLabel="Ver todos">
               <Text style={styles.seeAll}>Ver todos</Text>
             </TouchableOpacity>
           </View>
           <FlatList
-            data={loading ? Array(3).fill(null) : nearUniversity}
+            data={isLoading ? Array(3).fill(null) : nearUniversity}
             keyExtractor={(item, i) => item?.id || String(i)}
             horizontal
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={{ paddingLeft: SIZES.lg, paddingRight: SIZES.sm }}
             renderItem={({ item }) =>
-              loading ? <CardSkeleton /> : <PropertyCard property={item} horizontal />
+              isLoading || !item ? <CardSkeleton /> : <PropertyCard property={item} horizontal />
             }
           />
         </View>
 
         {/* Seção: Mais avaliados */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>{STRINGS.topRated}</Text>
-            <TouchableOpacity onPress={() => router.push('/(tabs)/search')} accessibilityLabel="Ver todos os mais avaliados">
-              <Text style={styles.seeAll}>Ver todos</Text>
-            </TouchableOpacity>
+        {topRated.length > 0 && (
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>{STRINGS.topRated}</Text>
+              <TouchableOpacity onPress={() => router.push('/(tabs)/search')} accessibilityLabel="Ver todos">
+                <Text style={styles.seeAll}>Ver todos</Text>
+              </TouchableOpacity>
+            </View>
+            <FlatList
+              data={topRated}
+              keyExtractor={(item) => item.id}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ paddingLeft: SIZES.lg, paddingRight: SIZES.sm }}
+              renderItem={({ item }) => <PropertyCard property={item} horizontal />}
+            />
           </View>
-          <FlatList
-            data={topRated}
-            keyExtractor={(item) => item.id}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ paddingLeft: SIZES.lg, paddingRight: SIZES.sm }}
-            renderItem={({ item }) => <PropertyCard property={item} horizontal />}
-          />
-        </View>
+        )}
 
         {/* Seção: Repúblicas */}
-        <View style={[styles.section, { paddingBottom: 100 }]}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>{STRINGS.republics}</Text>
+        {republics.length > 0 && (
+          <View style={[styles.section, { paddingBottom: 100 }]}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>{STRINGS.republics}</Text>
+            </View>
+            <View style={{ paddingHorizontal: SIZES.lg }}>
+              {republics.map((p) => (
+                <PropertyCard key={p.id} property={p} />
+              ))}
+            </View>
           </View>
-          <View style={{ paddingHorizontal: SIZES.lg }}>
-            {republics.map((p) => (
-              <PropertyCard key={p.id} property={p} />
-            ))}
+        )}
+
+        {allProperties.length === 0 && !isLoading && (
+          <View style={styles.empty}>
+            <Ionicons name="home-outline" size={56} color={COLORS.textLight} />
+            <Text style={styles.emptyText}>Nenhum imóvel disponível ainda.</Text>
           </View>
-        </View>
+        )}
       </ScrollView>
 
-      {/* FAB: Anunciar imóvel (apenas para anfitriões) */}
+      {/* FAB: apenas anfitriões */}
       {user?.user_type === 'host' && (
         <TouchableOpacity
           style={styles.fab}
@@ -203,7 +222,7 @@ const styles = StyleSheet.create({
   },
   categoryItem: { alignItems: 'center', gap: 6 },
   categoryIcon: {
-    width: 48, height: 48, borderRadius: 12, backgroundColor: '#E8F4FD',
+    width: 52, height: 52, borderRadius: 16, backgroundColor: COLORS.primaryTint,
     alignItems: 'center', justifyContent: 'center',
   },
   categoryLabel: { fontSize: 11, color: COLORS.text, fontWeight: '500' },
@@ -214,13 +233,15 @@ const styles = StyleSheet.create({
   },
   sectionTitle: { fontSize: 17, fontWeight: '700', color: COLORS.text },
   seeAll: { fontSize: 13, fontWeight: '600', color: COLORS.primaryLight },
+  empty: { alignItems: 'center', paddingTop: 60, gap: 12 },
+  emptyText: { fontSize: 14, color: COLORS.textSecondary },
   fab: {
-    position: 'absolute', bottom: 80, right: 20,
+    position: 'absolute', bottom: 100, right: 20,
     flexDirection: 'row', alignItems: 'center', gap: 6,
-    backgroundColor: COLORS.secondary, borderRadius: SIZES.radiusFull,
-    paddingVertical: 12, paddingHorizontal: 18,
+    backgroundColor: COLORS.primary, borderRadius: SIZES.radiusFull,
+    paddingVertical: 14, paddingHorizontal: 20,
     elevation: 6,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.2, shadowRadius: 6,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.25, shadowRadius: 8,
   },
   fabText: { color: COLORS.white, fontWeight: '700', fontSize: 14 },
 });

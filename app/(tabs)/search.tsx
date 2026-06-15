@@ -5,9 +5,10 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useQuery } from '@tanstack/react-query';
 import { PropertyCard } from '../../components/cards/PropertyCard';
 import { Button } from '../../components/ui/Button';
-import { MOCK_PROPERTIES } from '../../lib/mockData';
+import { fetchProperties } from '../../lib/api';
 import { COLORS, SIZES, PROPERTY_TYPES } from '../../constants';
 import { PropertyType } from '../../types';
 import { formatCurrency } from '../../lib/helpers';
@@ -17,15 +18,17 @@ export default function SearchScreen() {
   const [selectedType, setSelectedType] = useState<PropertyType | null>(null);
   const [maxPrice, setMaxPrice] = useState<number | null>(null);
   const [showFilters, setShowFilters] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
-
-  // Preço máx temporário no filtro (antes de aplicar)
   const [tempMaxPrice, setTempMaxPrice] = useState('');
   const [tempType, setTempType] = useState<PropertyType | null>(null);
 
+  const { data: allProperties = [], isLoading, refetch, isRefetching } = useQuery({
+    queryKey: ['properties'],
+    queryFn: () => fetchProperties(),
+  });
+
   const filteredProperties = useMemo(() => {
-    return MOCK_PROPERTIES.filter((p) => {
-      const matchQuery = !query || 
+    return allProperties.filter((p) => {
+      const matchQuery = !query ||
         p.title.toLowerCase().includes(query.toLowerCase()) ||
         p.city.toLowerCase().includes(query.toLowerCase()) ||
         p.neighborhood.toLowerCase().includes(query.toLowerCase());
@@ -33,7 +36,7 @@ export default function SearchScreen() {
       const matchPrice = !maxPrice || p.price_per_month <= maxPrice;
       return matchQuery && matchType && matchPrice;
     });
-  }, [query, selectedType, maxPrice]);
+  }, [allProperties, query, selectedType, maxPrice]);
 
   const openFilters = () => {
     setTempType(selectedType);
@@ -80,21 +83,25 @@ export default function SearchScreen() {
         </View>
         <TouchableOpacity style={styles.filterBtn} onPress={openFilters} accessibilityLabel="Abrir filtros">
           <Ionicons name="options-outline" size={20} color={activeFiltersCount > 0 ? COLORS.white : COLORS.primary} />
-          {activeFiltersCount > 0 && <View style={styles.filterBadge}><Text style={styles.filterBadgeText}>{activeFiltersCount}</Text></View>}
+          {activeFiltersCount > 0 && (
+            <View style={styles.filterBadge}>
+              <Text style={styles.filterBadgeText}>{activeFiltersCount}</Text>
+            </View>
+          )}
         </TouchableOpacity>
       </View>
 
-      {/* Tags de filtro ativos */}
+      {/* Tags de filtros ativos */}
       {(selectedType || maxPrice) && (
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.activeTags} contentContainerStyle={{ gap: 8, paddingHorizontal: SIZES.lg }}>
           {selectedType && (
-            <TouchableOpacity style={styles.tag} onPress={() => setSelectedType(null)} accessibilityLabel={`Remover filtro ${selectedType}`}>
+            <TouchableOpacity style={styles.tag} onPress={() => setSelectedType(null)}>
               <Text style={styles.tagText}>{PROPERTY_TYPES.find(t => t.value === selectedType)?.label}</Text>
               <Ionicons name="close" size={13} color={COLORS.primary} />
             </TouchableOpacity>
           )}
           {maxPrice && (
-            <TouchableOpacity style={styles.tag} onPress={() => setMaxPrice(null)} accessibilityLabel="Remover filtro de preço">
+            <TouchableOpacity style={styles.tag} onPress={() => setMaxPrice(null)}>
               <Text style={styles.tagText}>Até {formatCurrency(maxPrice)}</Text>
               <Ionicons name="close" size={13} color={COLORS.primary} />
             </TouchableOpacity>
@@ -105,23 +112,23 @@ export default function SearchScreen() {
       {/* Contador de resultados */}
       <View style={styles.resultsHeader}>
         <Text style={styles.resultsCount}>
-          {filteredProperties.length} {filteredProperties.length === 1 ? 'imóvel encontrado' : 'imóveis encontrados'}
+          {isLoading ? 'Buscando...' : `${filteredProperties.length} ${filteredProperties.length === 1 ? 'imóvel encontrado' : 'imóveis encontrados'}`}
         </Text>
       </View>
 
-      {/* Lista de resultados */}
+      {/* Lista */}
       <FlatList
         data={filteredProperties}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.list}
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); setTimeout(() => setRefreshing(false), 800); }} colors={[COLORS.primary]} />
+          <RefreshControl refreshing={isRefetching} onRefresh={refetch} colors={[COLORS.primary]} />
         }
         ListEmptyComponent={
           <View style={styles.empty}>
             <Ionicons name="search-outline" size={56} color={COLORS.textLight} />
-            <Text style={styles.emptyTitle}>Nenhum imóvel encontrado</Text>
+            <Text style={styles.emptyTitle}>{isLoading ? 'Carregando...' : 'Nenhum imóvel encontrado'}</Text>
             <Text style={styles.emptyText}>Tente outros termos ou remova alguns filtros.</Text>
             {activeFiltersCount > 0 && (
               <Button label="Limpar filtros" onPress={clearFilters} variant="outline" style={{ marginTop: 16 }} />
@@ -142,7 +149,6 @@ export default function SearchScreen() {
           </View>
 
           <ScrollView style={styles.modalContent}>
-            {/* Tipo de imóvel */}
             <Text style={styles.filterLabel}>Tipo de imóvel</Text>
             <View style={styles.typeGrid}>
               {PROPERTY_TYPES.map((t) => (
@@ -158,7 +164,6 @@ export default function SearchScreen() {
               ))}
             </View>
 
-            {/* Preço máximo */}
             <Text style={styles.filterLabel}>Preço máximo por mês</Text>
             <View style={styles.priceInput}>
               <Text style={styles.pricePreffix}>R$</Text>
@@ -173,14 +178,12 @@ export default function SearchScreen() {
               />
             </View>
 
-            {/* Faixas rápidas */}
             <View style={styles.pricePresets}>
               {[800, 1200, 1800, 2500].map((v) => (
                 <TouchableOpacity
                   key={v}
                   style={[styles.preset, tempMaxPrice === String(v) && styles.presetSelected]}
                   onPress={() => setTempMaxPrice(String(v))}
-                  accessibilityLabel={`Preço máximo ${formatCurrency(v)}`}
                 >
                   <Text style={[styles.presetText, tempMaxPrice === String(v) && styles.presetTextSelected]}>Até {formatCurrency(v)}</Text>
                 </TouchableOpacity>
@@ -207,7 +210,7 @@ const styles = StyleSheet.create({
   filterBadge: { position: 'absolute', top: -4, right: -4, width: 18, height: 18, borderRadius: 9, backgroundColor: COLORS.secondary, alignItems: 'center', justifyContent: 'center' },
   filterBadgeText: { fontSize: 10, color: COLORS.white, fontWeight: '700' },
   activeTags: { paddingVertical: 10, backgroundColor: COLORS.surface },
-  tag: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#E8F4FD', borderRadius: 20, paddingHorizontal: 12, paddingVertical: 6 },
+  tag: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: COLORS.primaryTint, borderRadius: 20, paddingHorizontal: 12, paddingVertical: 6 },
   tagText: { fontSize: 13, color: COLORS.primary, fontWeight: '500' },
   resultsHeader: { paddingHorizontal: SIZES.lg, paddingVertical: 10 },
   resultsCount: { fontSize: 13, color: COLORS.textSecondary },
@@ -215,7 +218,6 @@ const styles = StyleSheet.create({
   empty: { alignItems: 'center', paddingTop: 60 },
   emptyTitle: { fontSize: 18, fontWeight: '600', color: COLORS.text, marginTop: 16 },
   emptyText: { fontSize: 14, color: COLORS.textSecondary, textAlign: 'center', marginTop: 8 },
-  // Modal
   modal: { flex: 1, backgroundColor: COLORS.background },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: SIZES.lg, borderBottomWidth: 1, borderBottomColor: COLORS.border },
   modalTitle: { fontSize: 18, fontWeight: '700', color: COLORS.text },
@@ -231,7 +233,7 @@ const styles = StyleSheet.create({
   priceField: { flex: 1, fontSize: 15, color: COLORS.text, paddingVertical: 12 },
   pricePresets: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 12 },
   preset: { borderWidth: 1, borderColor: COLORS.border, borderRadius: 20, paddingHorizontal: 12, paddingVertical: 6, backgroundColor: COLORS.surface },
-  presetSelected: { borderColor: COLORS.primary, backgroundColor: '#E8F4FD' },
+  presetSelected: { borderColor: COLORS.primary, backgroundColor: COLORS.primaryTint },
   presetText: { fontSize: 13, color: COLORS.textSecondary },
   presetTextSelected: { color: COLORS.primary, fontWeight: '600' },
   modalFooter: { flexDirection: 'row', gap: 12, padding: SIZES.lg, borderTopWidth: 1, borderTopColor: COLORS.border },
