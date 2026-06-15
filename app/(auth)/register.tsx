@@ -35,7 +35,7 @@ export default function RegisterScreen() {
   const handleRegister = async () => {
     if (!validate()) return;
     setLoading(true);
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email: email.trim(),
       password,
       options: {
@@ -45,8 +45,15 @@ export default function RegisterScreen() {
     setLoading(false);
     if (error) {
       toast.error('Erro no cadastro', error.message);
+      return;
+    }
+    if (data.session) {
+      // Verificação de e-mail desativada no Supabase: o usuário já entra logado.
+      // O AuthGuard em _layout.tsx detecta o SIGNED_IN e redireciona para as tabs.
+      toast.success('Conta criada! 🎉', 'Bem-vindo ao StudentNest.');
     } else {
-      toast.success('Cadastro realizado! 🎉', 'Verifique seu e-mail para confirmar a conta.');
+      // Fallback caso a confirmação por e-mail seja reativada no projeto.
+      toast.success('Cadastro realizado! 🎉', 'Faça login para continuar.');
       setTimeout(() => router.replace('/(auth)/login'), 800);
     }
   };

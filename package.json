@@ -8,7 +8,8 @@
     "start:tunnel": "expo start --tunnel",
     "android": "expo run:android",
     "ios": "expo run:ios",
-    "build:android": "eas build --platform android --profile preview"
+    "build:android": "eas build --platform android --profile preview",
+    "icon": "node scripts/set-icon.js"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.2",
