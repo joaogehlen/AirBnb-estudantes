@@ -83,6 +83,10 @@ export default function NewListingScreen() {
 
   const handlePublish = async () => {
     if (!user) return;
+    if (!price || Number(price) <= 0) {
+      toast.error('Preço inválido', 'Informe um preço maior que zero.');
+      return;
+    }
     setLoading(true);
     try {
       setUploadProgress('Salvando imóvel...');
@@ -273,7 +277,12 @@ export default function NewListingScreen() {
         <Text style={styles.progressLabel}>Etapa {step + 1} de {STEPS.length}: {STEPS[step]}</Text>
       </View>
 
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        automaticallyAdjustKeyboardInsets
+      >
         {renderStep()}
         <View style={{ height: 40 }} />
       </ScrollView>

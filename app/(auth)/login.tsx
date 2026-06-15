@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, ScrollView,
-  KeyboardAvoidingView, Platform,
 } from 'react-native';
 import { router } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -14,6 +13,9 @@ import { toast } from '../../lib/toast';
 import { COLORS, SIZES, STRINGS, SHADOWS } from '../../constants';
 
 export default function LoginScreen() {
+  if (typeof globalThis !== 'undefined') {
+    (globalThis as any).__loginRenders = ((globalThis as any).__loginRenders || 0) + 1;
+  }
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -45,9 +47,14 @@ export default function LoginScreen() {
   };
 
   return (
-    <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+    <View style={styles.flex}>
       <StatusBar style="light" />
-      <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={styles.container}
+        keyboardShouldPersistTaps="handled"
+        automaticallyAdjustKeyboardInsets
+        showsVerticalScrollIndicator={false}
+      >
         {/* Header com gradiente */}
         <LinearGradient colors={[COLORS.primaryDark, COLORS.primary]} style={styles.header}>
           <View style={styles.logoCircle}>
@@ -110,7 +117,7 @@ export default function LoginScreen() {
           </TouchableOpacity>
         </View>
       </ScrollView>
-    </KeyboardAvoidingView>
+    </View>
   );
 }
 

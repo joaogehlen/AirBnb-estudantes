@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { memo, useState, useCallback } from 'react';
 import {
   View,
   TextInput,
@@ -28,7 +28,7 @@ interface InputProps {
   accessibilityLabel?: string;
 }
 
-export function Input({
+export const Input = memo(function Input({
   label,
   placeholder,
   value,
@@ -48,10 +48,14 @@ export function Input({
   const [showPass, setShowPass] = useState(false);
   const [focused, setFocused] = useState(false);
 
+  const handleFocus = useCallback(() => setFocused(true), []);
+  const handleBlur = useCallback(() => setFocused(false), []);
+
   return (
     <View style={[styles.wrapper, style]}>
       {label && <Text style={styles.label}>{label}</Text>}
       <View
+        collapsable={false}
         style={[
           styles.inputContainer,
           multiline && styles.multilineContainer,
@@ -64,7 +68,8 @@ export function Input({
             name={icon}
             size={19}
             color={focused ? COLORS.primary : COLORS.textLight}
-            style={{ marginRight: 8 }}
+            style={styles.icon}
+            pointerEvents="none"
           />
         )}
         <TextInput
@@ -77,11 +82,12 @@ export function Input({
           keyboardType={keyboardType}
           multiline={multiline}
           numberOfLines={numberOfLines}
-          onFocus={() => setFocused(true)}
-          onBlur={() => setFocused(false)}
+          onFocus={handleFocus}
+          onBlur={handleBlur}
           autoCapitalize={autoCapitalize || 'sentences'}
           onSubmitEditing={onSubmitEditing}
           returnKeyType={returnKeyType}
+          selectionColor={COLORS.primary}
           accessibilityLabel={accessibilityLabel || label}
         />
         {secureTextEntry && (
@@ -97,7 +103,7 @@ export function Input({
       {error && <Text style={styles.error}>{error}</Text>}
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   wrapper: { marginBottom: SIZES.md },
@@ -112,14 +118,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
   },
   multilineContainer: { alignItems: 'flex-start', paddingVertical: 4 },
-  focused: {
-    borderColor: COLORS.primary,
-    shadowColor: COLORS.primary,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.12,
-    shadowRadius: 6,
-    elevation: 1,
-  },
+  focused: { borderColor: COLORS.primary },
+  icon: { marginRight: 8 },
   errorBorder: { borderColor: COLORS.error },
   input: { flex: 1, fontSize: 15, color: COLORS.text, paddingVertical: 13 },
   multiline: { minHeight: 100, textAlignVertical: 'top' },

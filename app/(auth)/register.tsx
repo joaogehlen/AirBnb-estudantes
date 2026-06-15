@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, ScrollView,
-  KeyboardAvoidingView, Platform,
 } from 'react-native';
 import { router } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -26,7 +25,7 @@ export default function RegisterScreen() {
     if (!name.trim()) { toast.error('Atenção', 'Informe seu nome completo.'); return false; }
     if (!email.trim()) { toast.error('Atenção', 'Informe seu e-mail.'); return false; }
     if (userType === 'student' && !isUniversityEmail(email)) {
-      toast.error('E-mail universitário', 'Estudantes precisam usar e-mail .edu.br (ex: joao@usp.br).');
+      toast.error('E-mail institucional', 'Estudantes precisam usar e-mail @univates.br ou @universo.univates.br.');
       return false;
     }
     if (password.length < 6) { toast.error('Senha fraca', 'A senha deve ter pelo menos 6 caracteres.'); return false; }
@@ -53,9 +52,14 @@ export default function RegisterScreen() {
   };
 
   return (
-    <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+    <View style={styles.flex}>
       <StatusBar style="light" />
-      <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={styles.container}
+        keyboardShouldPersistTaps="handled"
+        automaticallyAdjustKeyboardInsets
+        showsVerticalScrollIndicator={false}
+      >
         <LinearGradient colors={[COLORS.primaryDark, COLORS.primary]} style={styles.header}>
           <TouchableOpacity style={styles.backBtn} onPress={() => router.back()} accessibilityLabel="Voltar">
             <Ionicons name="arrow-back" size={22} color={COLORS.white} />
@@ -102,7 +106,7 @@ export default function RegisterScreen() {
           <Input label={STRINGS.nameLabel} placeholder="Seu nome completo" value={name} onChangeText={setName} icon="person-outline" accessibilityLabel="Campo nome completo" />
           <Input
             label={STRINGS.emailLabel}
-            placeholder={userType === 'student' ? 'seu@usp.br' : 'seu@email.com'}
+            placeholder={userType === 'student' ? 'seu@universo.univates.br' : 'seu@email.com'}
             value={email}
             onChangeText={setEmail}
             keyboardType="email-address"
@@ -113,7 +117,7 @@ export default function RegisterScreen() {
           {userType === 'student' && (
             <View style={styles.hint}>
               <Ionicons name="information-circle" size={15} color={COLORS.primary} />
-              <Text style={styles.hintText}>Use seu e-mail universitário (.edu.br)</Text>
+              <Text style={styles.hintText}>Use seu e-mail institucional (@univates.br ou @universo.univates.br)</Text>
             </View>
           )}
           <Input
@@ -136,7 +140,7 @@ export default function RegisterScreen() {
           </View>
         </View>
       </ScrollView>
-    </KeyboardAvoidingView>
+    </View>
   );
 }
 

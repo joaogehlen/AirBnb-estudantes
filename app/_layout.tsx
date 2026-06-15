@@ -62,7 +62,7 @@ function AuthGuard() {
     );
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [setUser, setLoading, loadFavorites, clearFavorites]);
 
   useEffect(() => {
     if (isLoading) return;

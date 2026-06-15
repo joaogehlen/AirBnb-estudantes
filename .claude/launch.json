@@ -1,0 +1,12 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "web-static",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["serve", "dist", "-l", "19011"],
+      "port": 19011,
+      "autoPort": false
+    }
+  ]
+}

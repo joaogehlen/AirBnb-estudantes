@@ -37,12 +37,13 @@ export function PropertyCard({ property, horizontal }: PropertyCardProps) {
   const handlePress = () => router.push(`/listing/${property.id}`);
 
   return (
-    <TouchableOpacity
-      style={[styles.card, horizontal && styles.horizontal]}
-      onPress={handlePress}
-      accessibilityLabel={`Ver detalhes de ${property.title}`}
-      activeOpacity={0.92}
-    >
+    <View style={[styles.card, horizontal && styles.horizontal]}>
+      <TouchableOpacity
+        style={StyleSheet.absoluteFillObject}
+        onPress={handlePress}
+        accessibilityLabel={`Ver detalhes de ${property.title}`}
+        activeOpacity={0.92}
+      />
       <View style={styles.imageWrapper}>
         {coverPhoto ? (
           <Image source={{ uri: coverPhoto }} style={styles.image} resizeMode="cover" />
@@ -52,7 +53,7 @@ export function PropertyCard({ property, horizontal }: PropertyCardProps) {
           </View>
         )}
 
-        {/* Coração de favorito */}
+        {/* Coração de favorito — fora do TouchableOpacity do card para evitar duplo disparo */}
         <TouchableOpacity
           style={styles.heartBtn}
           onPress={() => toggleFavorite(property.id)}
@@ -93,7 +94,7 @@ export function PropertyCard({ property, horizontal }: PropertyCardProps) {
           <Text style={styles.priceLabel}> /mês</Text>
         </Text>
       </View>
-    </TouchableOpacity>
+    </View>
   );
 }
 
@@ -102,6 +103,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.surface,
     borderRadius: SIZES.radiusLg,
     marginBottom: SIZES.lg,
+    overflow: 'hidden',
     ...SHADOWS.sm,
   },
   horizontal: {

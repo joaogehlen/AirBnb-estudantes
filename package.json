@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "expo-router/entry",
   "scripts": {
-    "start": "cross-env REACT_NATIVE_PACKAGER_HOSTNAME=192.168.1.54 expo start --lan",
+    "start": "cross-env REACT_NATIVE_PACKAGER_HOSTNAME=192.168.1.162 expo start -c --lan",
     "start:default": "expo start",
     "start:tunnel": "expo start --tunnel",
     "android": "expo run:android",

@@ -61,7 +61,7 @@ export default function ChatScreen() {
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      channel.unsubscribe();
     };
   }, [id, user]);
 
@@ -77,7 +77,7 @@ export default function ChatScreen() {
       const conv = convos.find((c) => c.id === id);
       if (conv) setConversation(conv);
     } catch {
-      // ignora falha silenciosa
+      toast.error('Erro ao carregar conversa', 'Tente novamente.');
     } finally {
       setLoading(false);
     }

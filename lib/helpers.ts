@@ -28,9 +28,9 @@ export function timeAgo(dateString: string): string {
   return formatDate(dateString);
 }
 
-// Valida e-mail universitário (.edu.br)
+// Valida e-mail institucional da Univates (domínio univates.br)
 export function isUniversityEmail(email: string): boolean {
-  return email.toLowerCase().endsWith('.edu.br');
+  return email.toLowerCase().trim().endsWith('univates.br');
 }
 
 // Adiciona meses a uma data

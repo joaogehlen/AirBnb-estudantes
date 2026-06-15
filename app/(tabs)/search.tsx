@@ -139,7 +139,16 @@ export default function SearchScreen() {
       />
 
       {/* Modal de filtros */}
-      <Modal visible={showFilters} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setShowFilters(false)}>
+      <Modal
+        visible={showFilters}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => {
+          setTempType(selectedType);
+          setTempMaxPrice(maxPrice ? String(maxPrice) : '');
+          setShowFilters(false);
+        }}
+      >
         <View style={styles.modal}>
           <View style={styles.modalHeader}>
             <Text style={styles.modalTitle}>Filtros</Text>
@@ -148,7 +157,7 @@ export default function SearchScreen() {
             </TouchableOpacity>
           </View>
 
-          <ScrollView style={styles.modalContent}>
+          <ScrollView style={styles.modalContent} keyboardShouldPersistTaps="handled">
             <Text style={styles.filterLabel}>Tipo de imóvel</Text>
             <View style={styles.typeGrid}>
               {PROPERTY_TYPES.map((t) => (
