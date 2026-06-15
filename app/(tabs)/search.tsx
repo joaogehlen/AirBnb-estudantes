@@ -82,7 +82,7 @@ export default function SearchScreen() {
           )}
         </View>
         <TouchableOpacity style={styles.filterBtn} onPress={openFilters} accessibilityLabel="Abrir filtros">
-          <Ionicons name="options-outline" size={20} color={activeFiltersCount > 0 ? COLORS.white : COLORS.primary} />
+          <Ionicons name="options-outline" size={22} color={COLORS.white} />
           {activeFiltersCount > 0 && (
             <View style={styles.filterBadge}>
               <Text style={styles.filterBadgeText}>{activeFiltersCount}</Text>

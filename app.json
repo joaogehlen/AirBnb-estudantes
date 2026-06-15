@@ -19,7 +19,7 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/icon.png",
-        "backgroundColor": "#FF385C"
+        "backgroundColor": "#802030"
       },
       "package": "com.studentnest.app",
       "permissions": [
@@ -41,7 +41,7 @@
         {
           "image": "./assets/splash.png",
           "resizeMode": "contain",
-          "backgroundColor": "#1B4F72"
+          "backgroundColor": "#802030"
         }
       ],
       [

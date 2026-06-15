@@ -84,7 +84,7 @@ export default function RootLayout() {
         <QueryClientProvider client={queryClient}>
           <StatusBar style="dark" />
           <AuthGuard />
-          <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#F7F7F8' } }}>
+          <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#FAF6F4' } }}>
             <Stack.Screen name="(auth)" />
             <Stack.Screen name="(tabs)" />
             <Stack.Screen name="listing/[id]" options={{ animation: 'slide_from_right' }} />
@@ -92,7 +92,9 @@ export default function RootLayout() {
             <Stack.Screen name="booking/list" options={{ animation: 'slide_from_right' }} />
             <Stack.Screen name="host/dashboard" options={{ animation: 'slide_from_right' }} />
             <Stack.Screen name="host/new-listing" options={{ animation: 'slide_from_bottom' }} />
+            <Stack.Screen name="host/edit/[id]" options={{ animation: 'slide_from_right' }} />
             <Stack.Screen name="chat/[id]" options={{ animation: 'slide_from_right' }} />
+            <Stack.Screen name="notifications" options={{ animation: 'slide_from_right' }} />
           </Stack>
           <Toast config={toastConfig} topOffset={56} />
         </QueryClientProvider>

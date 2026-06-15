@@ -11,6 +11,7 @@ import { useQuery } from '@tanstack/react-query';
 import { PropertyCard } from '../../components/cards/PropertyCard';
 import { useAuthStore } from '../../stores/authStore';
 import { fetchProperties } from '../../lib/api';
+import { useNotifications } from '../../lib/notifications';
 import { COLORS, SIZES, STRINGS } from '../../constants';
 import { Property } from '../../types';
 
@@ -33,6 +34,7 @@ const skeletonStyles = StyleSheet.create({
 
 export default function HomeScreen() {
   const { user } = useAuthStore();
+  const { unreadCount } = useNotifications();
   const [search, setSearch] = useState('');
 
   const { data: allProperties = [], isLoading, refetch, isRefetching } = useQuery({
@@ -75,9 +77,9 @@ export default function HomeScreen() {
                 <Text style={styles.locationText}>Brasil</Text>
               </View>
             </View>
-            <TouchableOpacity style={styles.notifBtn} accessibilityLabel="Notificações">
+            <TouchableOpacity style={styles.notifBtn} onPress={() => router.push('/notifications')} accessibilityLabel="Avisos">
               <Ionicons name="notifications-outline" size={22} color={COLORS.white} />
-              <View style={styles.notifDot} />
+              {unreadCount > 0 && <View style={styles.notifDot} />}
             </TouchableOpacity>
           </View>
 
@@ -236,7 +238,7 @@ const styles = StyleSheet.create({
   empty: { alignItems: 'center', paddingTop: 60, gap: 12 },
   emptyText: { fontSize: 14, color: COLORS.textSecondary },
   fab: {
-    position: 'absolute', bottom: 100, right: 20,
+    position: 'absolute', bottom: 24, right: 16,
     flexDirection: 'row', alignItems: 'center', gap: 6,
     backgroundColor: COLORS.primary, borderRadius: SIZES.radiusFull,
     paddingVertical: 14, paddingHorizontal: 20,

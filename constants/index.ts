@@ -1,68 +1,69 @@
 // ============================================================
-// DESIGN SYSTEM DO STUDENTNEST — inspirado no Airbnb
+// DESIGN SYSTEM DO STUDENTNEST — paleta derivada do ícone do app
+// (bordô/vinho + creme), com dourado como acento.
 // ============================================================
 
 export const COLORS = {
-  // Marca (coral "rausch" estilo Airbnb)
-  primary: '#FF385C',
-  primaryLight: '#FF6B81',
-  primaryDark: '#D70466',
-  primaryTint: '#FFF0F2',      // fundo suave coral (substitui o antigo azul claro)
+  // Marca (bordô/vinho do ícone — #802030)
+  primary: '#802030',
+  primaryLight: '#A6334B',
+  primaryDark: '#5C1622',
+  primaryTint: '#F7EBEE',      // fundo suave rosado/creme
 
-  // Secundária / acentos
-  secondary: '#FF9F1C',
-  secondaryLight: '#FFD166',
-  accent: '#00A699',           // teal Airbnb (verificado / destaques)
-  accentTint: '#E6F7F5',
+  // Secundária / acentos (dourado que combina com o vinho + creme)
+  secondary: '#C0892D',
+  secondaryLight: '#E7CC83',
+  accent: '#9C6B1E',           // bronze/ouro (destaques / anfitrião verificado)
+  accentTint: '#F6EEDD',
 
-  // Superfícies
-  background: '#F7F7F8',
+  // Superfícies (off-white quente, eco do creme do ícone)
+  background: '#FAF6F4',
   surface: '#FFFFFF',
-  surfaceSecondary: '#F2F3F5',
+  surfaceSecondary: '#F3EDEA',
 
-  // Texto
-  text: '#222222',
-  textSecondary: '#717171',
-  textLight: '#B0B0B0',
+  // Texto (cinza quente)
+  text: '#241C1F',
+  textSecondary: '#6E6166',
+  textLight: '#A89DA1',
 
-  // Bordas
-  border: '#EBEBEB',
-  borderDark: '#DDDDDD',
+  // Bordas (neutros quentes)
+  border: '#EAE3E0',
+  borderDark: '#D8CFCB',
 
   // Status / feedback
-  error: '#E11900',
-  errorLight: '#FDECEA',
-  success: '#008A05',
-  successLight: '#E3F6E5',
-  warning: '#F5A623',
-  warningLight: '#FEF3E2',
-  info: '#2E86C1',
-  infoLight: '#E8F2FB',
+  error: '#D11A2A',
+  errorLight: '#FBE9EB',
+  success: '#1E7A47',
+  successLight: '#E4F2EA',
+  warning: '#C98A1E',
+  warningLight: '#FAF0DA',
+  info: '#7A2E45',             // info em tom de marca (vinho suave)
+  infoLight: '#F4E8EC',
 
   // Status de reserva
-  pending: '#F5A623',
-  confirmed: '#008A05',
-  cancelled: '#E11900',
-  completed: '#717171',
+  pending: '#C98A1E',
+  confirmed: '#1E7A47',
+  cancelled: '#D11A2A',
+  completed: '#6E6166',
 
   // Diversos
-  star: '#FFB400',
+  star: '#E0A21E',
   white: '#FFFFFF',
-  black: '#1A1A1A',
+  black: '#1A1416',
   overlay: 'rgba(0,0,0,0.5)',
 
-  // Escala neutra (compat. com componentes utilitários)
-  neutral100: '#F2F3F5',
-  neutral200: '#EBEBEB',
-  neutral300: '#DDDDDD',
-  neutral400: '#CED4DA',
-  neutral500: '#B0B0B0',
-  neutral600: '#717171',
-  neutral700: '#484848',
-  neutral800: '#343A40',
-  neutral900: '#222222',
-  primary100: '#FFE2E7',
-  danger: '#E11900',
+  // Escala neutra quente (compat. com componentes utilitários)
+  neutral100: '#F3EDEA',
+  neutral200: '#EAE3E0',
+  neutral300: '#D8CFCB',
+  neutral400: '#C4B8B3',
+  neutral500: '#A89DA1',
+  neutral600: '#6E6166',
+  neutral700: '#48383D',
+  neutral800: '#33262A',
+  neutral900: '#241C1F',
+  primary100: '#F2DCE1',
+  danger: '#D11A2A',
 };
 
 export const FONTS = {

@@ -191,18 +191,79 @@ export async function createProperty(payload: {
   return data;
 }
 
-export async function uploadAndInsertPhoto(
-  uri: string,
-  propertyId: string,
-  index: number
+export async function updateProperty(
+  id: string,
+  payload: Partial<{
+    title: string;
+    description: string;
+    type: string;
+    city: string;
+    state: string;
+    neighborhood: string;
+    price_per_month: number;
+    min_stay_months: number;
+    rules: string | null;
+    is_active: boolean;
+  }>
 ) {
-  const filename = `${propertyId}/${Date.now()}_${index}.jpg`;
-  const response = await fetch(uri);
-  const blob = await response.blob();
+  const { data, error } = await supabase
+    .from('properties')
+    .update(payload)
+    .eq('id', id)
+    .select()
+    .single();
+  if (error) throw error;
+  return data as Property;
+}
+
+export async function deletePropertyPhoto(photoId: string) {
+  const { error } = await supabase
+    .from('property_photos')
+    .delete()
+    .eq('id', photoId);
+  if (error) throw error;
+}
+
+// Decodifica base64 -> bytes reais. No React Native, `fetch(uri).blob()`
+// gera um Blob de 0 byte ao subir pro Storage, então as fotos ficavam quebradas.
+function base64ToUint8Array(base64: string): Uint8Array {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+  const lookup = new Uint8Array(256);
+  for (let i = 0; i < chars.length; i++) lookup[chars.charCodeAt(i)] = i;
+
+  const len = base64.length;
+  let bufferLength = (len * 3) / 4;
+  if (base64[len - 1] === '=') {
+    bufferLength--;
+    if (base64[len - 2] === '=') bufferLength--;
+  }
+  const bytes = new Uint8Array(bufferLength);
+  let p = 0;
+  for (let i = 0; i < len; i += 4) {
+    const e1 = lookup[base64.charCodeAt(i)];
+    const e2 = lookup[base64.charCodeAt(i + 1)];
+    const e3 = lookup[base64.charCodeAt(i + 2)];
+    const e4 = lookup[base64.charCodeAt(i + 3)];
+    if (p < bufferLength) bytes[p++] = (e1 << 2) | (e2 >> 4);
+    if (p < bufferLength) bytes[p++] = ((e2 & 15) << 4) | (e3 >> 2);
+    if (p < bufferLength) bytes[p++] = ((e3 & 3) << 6) | (e4 & 63);
+  }
+  return bytes;
+}
+
+export async function uploadAndInsertPhoto(
+  base64: string,
+  propertyId: string,
+  index: number,
+  contentType: string = 'image/jpeg'
+) {
+  const ext = contentType.includes('png') ? 'png' : 'jpg';
+  const filename = `${propertyId}/${Date.now()}_${index}.${ext}`;
+  const bytes = base64ToUint8Array(base64);
 
   const { data: uploaded, error: uploadError } = await supabase.storage
     .from('property-photos')
-    .upload(filename, blob, { contentType: 'image/jpeg', upsert: false });
+    .upload(filename, bytes.buffer as ArrayBuffer, { contentType, upsert: false });
   if (uploadError) throw uploadError;
 
   const { data: { publicUrl } } = supabase.storage

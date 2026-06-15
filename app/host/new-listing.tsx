@@ -40,7 +40,7 @@ export default function NewListingScreen() {
   const [city, setCity] = useState('');
   const [state, setState] = useState('');
   const [neighborhood, setNeighborhood] = useState('');
-  const [photos, setPhotos] = useState<string[]>([]);
+  const [photos, setPhotos] = useState<{ uri: string; base64: string | null; mimeType: string | null }[]>([]);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [price, setPrice] = useState('');
@@ -65,11 +65,16 @@ export default function NewListingScreen() {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images'],
       allowsMultipleSelection: true,
-      quality: 0.8,
+      quality: 0.7,
+      base64: true,
     });
     if (!result.canceled) {
-      const uris = result.assets.map((a) => a.uri);
-      setPhotos((prev) => [...prev, ...uris].slice(0, 10));
+      const picked = result.assets.map((a) => ({
+        uri: a.uri,
+        base64: a.base64 ?? null,
+        mimeType: a.mimeType ?? null,
+      }));
+      setPhotos((prev) => [...prev, ...picked].slice(0, 10));
     }
   };
 
@@ -103,11 +108,13 @@ export default function NewListingScreen() {
         rules: rules.trim() || undefined,
       });
 
-      // Upload fotos
+      // Upload fotos (usa o base64 capturado no picker — bytes reais)
       if (photos.length > 0) {
         for (let i = 0; i < photos.length; i++) {
+          const p = photos[i];
+          if (!p.base64) continue;
           setUploadProgress(`Enviando foto ${i + 1} de ${photos.length}...`);
-          await uploadAndInsertPhoto(photos[i], property.id, i);
+          await uploadAndInsertPhoto(p.base64, property.id, i, p.mimeType || 'image/jpeg');
         }
       }
 
@@ -163,9 +170,9 @@ export default function NewListingScreen() {
             <Text style={styles.stepTitle}>Fotos do imóvel</Text>
             <Text style={styles.stepSubtitle}>Adicione pelo menos 1 foto. Imóveis com mais fotos recebem mais visitas.</Text>
             <View style={styles.photoGrid}>
-              {photos.map((uri, i) => (
+              {photos.map((p, i) => (
                 <View key={i} style={styles.photoWrapper}>
-                  <Image source={{ uri }} style={styles.photoThumb} />
+                  <Image source={{ uri: p.uri }} style={styles.photoThumb} />
                   <TouchableOpacity
                     style={styles.removePhoto}
                     onPress={() => setPhotos((prev) => prev.filter((_, j) => j !== i))}
@@ -222,7 +229,7 @@ export default function NewListingScreen() {
           <View>
             <Text style={styles.stepTitle}>Revise seu anúncio</Text>
             <View style={styles.reviewCard}>
-              {photos[0] && <Image source={{ uri: photos[0] }} style={styles.reviewPhoto} resizeMode="cover" />}
+              {photos[0] && <Image source={{ uri: photos[0].uri }} style={styles.reviewPhoto} resizeMode="cover" />}
               <View style={styles.reviewInfo}>
                 <Text style={styles.reviewTitle}>{title || '(sem título)'}</Text>
                 <Text style={styles.reviewLocation}>{neighborhood}, {city}</Text>

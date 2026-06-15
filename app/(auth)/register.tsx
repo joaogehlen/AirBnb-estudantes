@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import {
-  View, Text, StyleSheet, TouchableOpacity, ScrollView,
+  View, Text, StyleSheet, TouchableOpacity, ScrollView, Image,
 } from 'react-native';
 import { router } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -10,7 +10,7 @@ import { Input } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
 import { supabase } from '../../lib/supabase';
 import { toast } from '../../lib/toast';
-import { COLORS, SIZES, STRINGS } from '../../constants';
+import { COLORS, SIZES, STRINGS, SHADOWS } from '../../constants';
 import { isUniversityEmail } from '../../lib/helpers';
 import { UserType } from '../../types';
 
@@ -72,7 +72,12 @@ export default function RegisterScreen() {
             <Ionicons name="arrow-back" size={22} color={COLORS.white} />
           </TouchableOpacity>
           <View style={styles.logoCircle}>
-            <Ionicons name="home" size={28} color={COLORS.white} />
+            <Image
+              source={require('../../assets/icon.png')}
+              style={styles.logoImg}
+              resizeMode="cover"
+              accessibilityLabel="Logo do StudentNest"
+            />
           </View>
           <Text style={styles.appName}>{STRINGS.appName}</Text>
         </LinearGradient>
@@ -163,10 +168,12 @@ const styles = StyleSheet.create({
   },
   backBtn: { position: 'absolute', top: 54, left: 20, padding: 4, zIndex: 2 },
   logoCircle: {
-    width: 58, height: 58, borderRadius: 18,
-    backgroundColor: 'rgba(255,255,255,0.18)',
+    width: 64, height: 64, borderRadius: 18,
+    backgroundColor: COLORS.white,
     alignItems: 'center', justifyContent: 'center',
+    ...SHADOWS.md,
   },
+  logoImg: { width: 48, height: 48, borderRadius: 13 },
   appName: { fontSize: 24, fontWeight: '800', color: COLORS.white },
   form: {
     flex: 1,

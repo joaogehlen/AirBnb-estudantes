@@ -126,7 +126,15 @@ export default function HostDashboardScreen() {
                         </Text>
                       </View>
                     </View>
-                    <Ionicons name="chevron-forward" size={18} color={COLORS.textLight} />
+                    <TouchableOpacity
+                      style={styles.editBtn}
+                      onPress={() => router.push(`/host/edit/${p.id}`)}
+                      accessibilityLabel={`Editar ${p.title}`}
+                      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                    >
+                      <Ionicons name="create-outline" size={20} color={COLORS.primary} />
+                    </TouchableOpacity>
+                    <Ionicons name="chevron-forward" size={18} color={COLORS.textLight} style={{ marginRight: 10 }} />
                   </TouchableOpacity>
                 );
               })
@@ -196,6 +204,7 @@ const styles = StyleSheet.create({
   emptyText: { fontSize: 14, color: COLORS.textSecondary, paddingBottom: 16 },
   propertyCard: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: COLORS.surface, borderRadius: SIZES.radiusMd, overflow: 'hidden', borderWidth: 1, borderColor: COLORS.border, marginBottom: 10 },
   propertyImage: { width: 80, height: 80 },
+  editBtn: { padding: 6 },
   propertyInfo: { flex: 1, padding: 10 },
   propertyTitle: { fontSize: 14, fontWeight: '600', color: COLORS.text, marginBottom: 2 },
   propertyCity: { fontSize: 12, color: COLORS.textSecondary, marginBottom: 4 },

@@ -126,6 +126,11 @@ export default function ListingDetailScreen() {
               <Ionicons name="arrow-back" size={20} color={COLORS.text} />
             </TouchableOpacity>
             <View style={styles.overlayRight}>
+              {user?.id === property.host_id && (
+                <TouchableOpacity style={styles.iconBtn} onPress={() => router.push(`/host/edit/${property.id}`)} accessibilityLabel="Editar imóvel">
+                  <Ionicons name="create-outline" size={20} color={COLORS.text} />
+                </TouchableOpacity>
+              )}
               <TouchableOpacity style={styles.iconBtn} onPress={handleShare} accessibilityLabel="Compartilhar">
                 <Ionicons name="share-outline" size={20} color={COLORS.text} />
               </TouchableOpacity>

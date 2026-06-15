@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
 import {
-  View, Text, StyleSheet, TouchableOpacity, ScrollView,
+  View, Text, StyleSheet, TouchableOpacity, ScrollView, Image,
 } from 'react-native';
 import { router } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
 import { Input } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
@@ -58,7 +57,12 @@ export default function LoginScreen() {
         {/* Header com gradiente */}
         <LinearGradient colors={[COLORS.primaryDark, COLORS.primary]} style={styles.header}>
           <View style={styles.logoCircle}>
-            <Ionicons name="home" size={36} color={COLORS.white} />
+            <Image
+              source={require('../../assets/icon.png')}
+              style={styles.logoImg}
+              resizeMode="cover"
+              accessibilityLabel="Logo do StudentNest"
+            />
           </View>
           <Text style={styles.appName}>{STRINGS.appName}</Text>
           <Text style={styles.tagline}>{STRINGS.tagline}</Text>
@@ -131,11 +135,13 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   logoCircle: {
-    width: 76, height: 76, borderRadius: 24,
-    backgroundColor: 'rgba(255,255,255,0.18)',
+    width: 84, height: 84, borderRadius: 24,
+    backgroundColor: COLORS.white,
     alignItems: 'center', justifyContent: 'center',
     marginBottom: 4,
+    ...SHADOWS.md,
   },
+  logoImg: { width: 64, height: 64, borderRadius: 16 },
   appName: { fontSize: 30, fontWeight: '800', color: COLORS.white, letterSpacing: 0.3 },
   tagline: { fontSize: 14, color: 'rgba(255,255,255,0.85)', textAlign: 'center' },
   form: {
